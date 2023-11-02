@@ -10,5 +10,9 @@
     },
     "hide-files.files": [
         ".vscode"
+    ],
+    "rust-analyzer.linkedProjects": [
+        "./Cargo.toml",
+        "./Cargo.toml"
     ]
 }
