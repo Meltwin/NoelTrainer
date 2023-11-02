@@ -18,13 +18,29 @@ class Film:
         out = "{"
 
         def addElemStr(key, value) -> str : 
+            if value == None:
+                return ""
             n_val = value.strip("\r\n").strip().replace("\"", "\\\"")
-            if n_val != None and n_val != "":
+            if n_val != "":
                 return f"\"{key}\":\"{n_val}\","
             return ""
         
-        out += addElemStr("start", self.start)
-        out += addElemStr("stop", self.stop)
+        def addDate(key, value) -> str:
+            if value == None:
+                return ""
+            n_val = value.strip("\r\n").strip().replace("\"", "\\\"")
+            if n_val != "":
+                year = n_val[:4]
+                month = n_val[4:6]
+                day = n_val[6:8]
+                hour = n_val[8:10]
+                minutes = n_val[10:12]
+                seconds = n_val[12:14]
+                return f"\"{key}\":\"{year}-{month}-{day} {hour}:{minutes}:{seconds}\","
+            return ""
+        
+        out += addDate("start", self.start)
+        out += addDate("stop", self.stop)
         if self.channel != None:
             out += f"\"channel\": \"{self.channel.name}\","
         out += addElemStr("title", self.title)

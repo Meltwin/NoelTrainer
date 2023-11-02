@@ -3,11 +3,14 @@ from noel.scrapping import parse_xml_distant
 from noel.selecting import select_programs
 from noel.ftp import make_connection, save_to_json, upload_json
 from getpass import getpass
+from requests import get
+import json
 
 XML_TV_ENDPOINT = 'https://xmltv.ch/xmltv/xmltv-tnt.xml'
 STOPWORD_ENDPOINT = 'https://countwordsfree.com/stopwords/french/txt'
 LOCAL_FILE = "./temp/scrapped_data.json"
 DISTANT_FILE = "www/noel/beta/api/film/scrapped_data.json"
+DB_UPDATER = "https://noel.zelbu.fr/beta/api/film/updateDB.php"
 
 
 def update_bdd(parser: ArgumentParser):
@@ -20,6 +23,18 @@ def update_bdd(parser: ArgumentParser):
     con = make_connection(host, psw)
     upload_json(con, LOCAL_FILE, DISTANT_FILE)
     con.close()
+
+    # Update DB
+    data = get(DB_UPDATER)
+    try:
+        data = json.loads(data.content)
+    except:
+        ...
+    finally:
+        print(data.content)
+
+    
+
     
 
 if __name__ == "__main__":
