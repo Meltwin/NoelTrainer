@@ -1,2 +1,0 @@
-#!/bin/sh
-./target/debug/noel_trainer --website ./website
