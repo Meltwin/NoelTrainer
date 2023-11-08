@@ -1,11 +1,17 @@
 from noel.types import Film, TVProgram
-from typing import List
+from typing import List, Tuple
 from requests import get
 from unidecode import unidecode
 
 def __download_stop_words(url: str) -> List[str]:
-    data = [unidecode(w).lower() for w in get(url).content.decode("utf-8").split("\r\n")]
-    return data
+    return [unidecode(w).lower() for w in get(url).content.decode("utf-8").split("\r\n")]
+
+def __download_custom_stopwords(url: str) -> Tuple[List[str], List[str]]:
+    try:
+        data = get(url).json()
+        return (data["stopwords"], data["blacklist"])
+    except:
+        return ([], [])
 
 def __replace_ponctuation(value: str) -> str:
     value = value.replace(",", " ")
@@ -40,12 +46,21 @@ def __get_important_words(film: Film, stopwords: List[str]) -> List[str]:
     return out
 
 
-def select_programs(tv: TVProgram, stopword_url: str) -> List[Film]:
-    stopwords = __download_stop_words(stopword_url)
-    film_filterd = []
+def select_programs(tv: TVProgram, stopword_url: str, custom_stopword_url: str) -> List[Film]:
+    stopwords, blacklist = __download_custom_stopwords(custom_stopword_url)
+    stopwords += __download_stop_words(stopword_url)
+    film_filtered = []
+    next = False
     for f in tv.films:
         words = __get_important_words(f, stopwords)
+        for w in words:
+            if w in blacklist:
+                next = True
+                break
+        if next:
+            next = False
+            continue
         if "noel" in words:
-            film_filterd.append(f)
+            film_filtered.append(f)
 
-    return film_filterd
+    return film_filtered

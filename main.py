@@ -9,18 +9,21 @@ import json
 
 XML_TV_ENDPOINT = 'https://xmltv.ch/xmltv/xmltv-tnt.xml'
 STOPWORD_ENDPOINT = 'https://countwordsfree.com/stopwords/french/txt'
+CUSTOM_STOPWORD_ENDPOINT = 'https://noel.zelbu.fr/api/config/stopwords.php'
 LOCAL_FILE = "./temp/scrapped_data.json"
 DISTANT_FILE = "www/noel/api/film/scrapped_data.json"
 DB_UPDATER = "https://noel.zelbu.fr/api/film/updateDB.php"
 
 
 def update_bdd():
+    # Scrap the data from online
+    program = parse_xml_distant(XML_TV_ENDPOINT)
+    films = select_programs(program, STOPWORD_ENDPOINT, CUSTOM_STOPWORD_ENDPOINT)
+    save_to_json(LOCAL_FILE, films)
+
+    # Upload and update db
     host = input("Enter user@host : ")
     psw = getpass("Enter password : ")
-
-    program = parse_xml_distant(XML_TV_ENDPOINT)
-    films = select_programs(program, STOPWORD_ENDPOINT)
-    save_to_json(LOCAL_FILE, films)
     con = make_connection(host, psw)
     upload_json(con, LOCAL_FILE, DISTANT_FILE)
     con.close()

@@ -3,10 +3,13 @@ from requests import get
 from xml.dom.minidom import parseString, Element
 from .types import Film, Channel, TVProgram
 
+def __format_text(text: str) -> str:
+    return text.strip("\r\n").strip().replace("\"", "\\\"")
+
 def __get_tag_value(node:Element) -> str:
     if len(node.childNodes) > 0:
-        return node.childNodes[0].nodeValue
-    return node.nodeValue
+        return __format_text(node.childNodes[0].nodeValue)
+    return __format_text(node.nodeValue)
 
 def __get_associated_channel(id, channels: List[Channel]) -> Channel|None:
     for ch in channels:
@@ -25,15 +28,15 @@ def __parse_length(value: str, unit: str) -> int:
 def __get_audio(node: Element) -> str:
     if len(node.childNodes) > 0:
         return __get_tag_value(node.childNodes[0])
-    else: return node.nodeValue
+    else: return __format_text(node.nodeValue)
 
 def __parseFilm(node: Element, channels: List[Channel]) -> Film:
     film = Film()
 
     # Parse attributes
-    film.start = Film.make_date(node.getAttribute("start"))
-    film.stop = Film.make_date(node.getAttribute("stop"))
-    film.channel = __get_associated_channel(node.getAttribute("channel"), channels)
+    film.start = Film.make_date(__format_text(node.getAttribute("start")))
+    film.stop = Film.make_date(__format_text(node.getAttribute("stop")))
+    film.channel = __get_associated_channel(__format_text(node.getAttribute("channel")), channels)
 
     # Parse childs
     for child in node.childNodes:
@@ -48,9 +51,9 @@ def __parseFilm(node: Element, channels: List[Channel]) -> Film:
             case "desc":
                 film.desc = __get_tag_value(child)
             case "length":
-                film.length = __parse_length(__get_tag_value(child), child.getAttribute("units"))
+                film.length = __parse_length(__get_tag_value(child), __format_text(child.getAttribute("units")))
             case "icon":
-                film.icon = child.getAttribute("src")
+                film.icon = __format_text(child.getAttribute("src"))
             case "audio":
                 film.audio = __get_audio(child)
             case "rating":
@@ -67,7 +70,7 @@ def __parseChannel(node: Element) -> Channel:
     channel = Channel()
 
     # Parse attributes
-    channel.id = node.getAttribute("id")
+    channel.id = __format_text(node.getAttribute("id"))
 
     # Parse childs
     for child in node.childNodes:
@@ -76,7 +79,7 @@ def __parseChannel(node: Element) -> Channel:
         elif child.tagName == "display-name":
             channel.name = __get_tag_value(child)
         elif child.tagName == "icon":
-            channel.icon = child.getAttribute("src")
+            channel.icon = __format_text(child.getAttribute("src"))
     return channel
 
 
