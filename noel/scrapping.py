@@ -8,7 +8,7 @@ def __get_tag_value(node:Element) -> str:
         return node.childNodes[0].nodeValue
     return node.nodeValue
 
-def __get_associated_channel(id, channels: List[Channel]) -> Channel:
+def __get_associated_channel(id, channels: List[Channel]) -> Channel|None:
     for ch in channels:
         if ch.id == id:
             return ch
@@ -27,12 +27,12 @@ def __get_audio(node: Element) -> str:
         return __get_tag_value(node.childNodes[0])
     else: return node.nodeValue
 
-def __parseProgram(node: Element, channels: List[Channel]) -> Film:
+def __parseFilm(node: Element, channels: List[Channel]) -> Film:
     film = Film()
 
     # Parse attributes
-    film.start = node.getAttribute("start")
-    film.stop = node.getAttribute("stop")
+    film.start = Film.make_date(node.getAttribute("start"))
+    film.stop = Film.make_date(node.getAttribute("stop"))
     film.channel = __get_associated_channel(node.getAttribute("channel"), channels)
 
     # Parse childs
@@ -80,7 +80,7 @@ def __parseChannel(node: Element) -> Channel:
     return channel
 
 
-def __parseTV(node: Element) -> TVProgram:
+def __parseTVProgram(node: Element) -> TVProgram:
     program = TVProgram()
     for child in node.childNodes:
         if type(child) is not Element:
@@ -88,15 +88,15 @@ def __parseTV(node: Element) -> TVProgram:
         elif child.tagName == "channel":
             program.channels.append(__parseChannel(child))
         elif child.tagName == "programme":
-            program.films.append(__parseProgram(child, program.channels))
+            program.films.append(__parseFilm(child, program.channels))
     return program
 
-def parse_xml_distant(xml_url: str):
+def parse_xml_distant(xml_url: str) -> TVProgram:
     data = get(xml_url)
     data = parseString(data.content)
-    program = None
+    program = TVProgram()
     for node in data.childNodes:
         if type(node) is Element:
-            program = __parseTV(node)
+            program = __parseTVProgram(node)
             break
     return program
